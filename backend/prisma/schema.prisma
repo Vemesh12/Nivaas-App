@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  RESIDENT
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PostCategory {
+  GENERAL
+  ALERT
+  HELP
+  LOST_FOUND
+  EVENT
+}
+
+model User {
+  id              String     @id @default(cuid())
+  fullName        String
+  phone           String     @unique
+  email           String?    @unique
+  password        String
+  flatNumber      String
+  profileImage    String?
+  role            Role       @default(RESIDENT)
+  status          UserStatus @default(PENDING)
+  showPhoneNumber Boolean    @default(false)
+  communityId     String?
+  community       Community? @relation("CommunityMembers", fields: [communityId], references: [id], onDelete: SetNull)
+  createdCommunity Community? @relation("CommunityCreator")
+  posts           Post[]
+  comments        Comment[]
+  likes           Like[]
+  notices         Notice[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Community {
+  id          String   @id @default(cuid())
+  name        String
+  city        String
+  area        String
+  inviteCode  String   @unique
+  createdById String   @unique
+  createdBy   User     @relation("CommunityCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  members     User[]   @relation("CommunityMembers")
+  posts       Post[]
+  notices     Notice[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  category    PostCategory @default(GENERAL)
+  imageUrl    String?
+  isPinned    Boolean      @default(false)
+  communityId String
+  community   Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  likes       Like[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([communityId, category, isPinned])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  text      String
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model Notice {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  isImportant Boolean   @default(false)
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
