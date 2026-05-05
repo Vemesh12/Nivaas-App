@@ -7,6 +7,7 @@ import { userApi } from "../../api/userApi";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import EmptyState from "../../components/EmptyState";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 type Resident = { id: string; fullName: string; flatNumber: string; phone?: string | null };
 
@@ -24,7 +25,7 @@ export default function ManageMembersScreen() {
       await userApi.remove(id);
       await load();
     } catch (error: any) {
-      Alert.alert("Could not remove", error.message || "Please try again.");
+      Alert.alert("Could not remove", getApiErrorMessage(error, "Please try again."));
     }
   };
 

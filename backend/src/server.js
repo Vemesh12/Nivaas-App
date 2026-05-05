@@ -2,5 +2,5 @@ const app = require("./app");
 const env = require("./config/env");
 
 app.listen(env.port, "0.0.0.0", () => {
-  console.log(`Mohalla API running on port ${env.port}`);
+  console.log(`Nivaas API running on port ${env.port}`);
 });

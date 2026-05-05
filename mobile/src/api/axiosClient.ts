@@ -9,7 +9,7 @@ export const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem("mohalla_token");
+  const token = await AsyncStorage.getItem("nivaas_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -18,7 +18,25 @@ axiosClient.interceptors.request.use(async (config) => {
 
 axiosClient.interceptors.response.use(
   (response) => response.data,
-  (error) => Promise.reject(error.response?.data || error)
+  (error) => {
+    if (!error.response) {
+      const message = error.code === "ECONNABORTED"
+        ? "The backend took too long to respond. Check that the server is running."
+        : "Backend is not reachable. Check your API URL, Wi-Fi, tunnel, and backend server.";
+      return Promise.reject(Object.assign(new Error(message), { code: error.code }));
+    }
+
+    const data = error.response.data || {};
+    const validationMessage = Array.isArray(data.errors) && data.errors[0]?.message
+      ? data.errors[0].message
+      : undefined;
+    const message = data.message === "Validation failed" && validationMessage ? validationMessage : data.message;
+
+    return Promise.reject(Object.assign(new Error(message || "Something went wrong."), {
+      status: error.response.status,
+      errors: data.errors
+    }));
+  }
 );
 
 export default axiosClient;

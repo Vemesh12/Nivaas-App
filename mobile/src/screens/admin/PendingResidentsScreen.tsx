@@ -7,6 +7,7 @@ import { userApi } from "../../api/userApi";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import EmptyState from "../../components/EmptyState";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 type PendingResident = { id: string; fullName: string; phone: string; flatNumber: string };
 
@@ -24,7 +25,7 @@ export default function PendingResidentsScreen() {
       await (action === "approve" ? userApi.approve(id) : userApi.reject(id));
       await load();
     } catch (error: any) {
-      Alert.alert("Action failed", error.message || "Please try again.");
+      Alert.alert("Action failed", getApiErrorMessage(error, "Please try again."));
     }
   };
 

@@ -15,7 +15,7 @@ type AuthState = {
   logout: () => Promise<void>;
 };
 
-const TOKEN_KEY = "mohalla_token";
+const TOKEN_KEY = "nivaas_token";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,

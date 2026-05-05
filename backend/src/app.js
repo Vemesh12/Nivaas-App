@@ -12,7 +12,7 @@ app.use(cors({ origin: env.corsOrigin }));
 app.use(express.json());
 app.use(morgan("dev"));
 
-app.get("/health", (req, res) => res.json({ success: true, message: "Mohalla API is healthy" }));
+app.get("/health", (req, res) => res.json({ success: true, message: "Nivaas API is healthy" }));
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/communities", require("./routes/community.routes"));
 app.use("/api/posts", require("./routes/post.routes"));

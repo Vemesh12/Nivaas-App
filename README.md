@@ -1,13 +1,13 @@
-# Mohalla
+# Nivaas
 
-Mohalla is a focused MVP for verified apartment, street, or neighbourhood communities. It replaces messy group chats with structured posts, notices, resident approval, directory privacy, and admin controls.
+Nivaas is a focused MVP for verified apartment, street, or neighbourhood communities. It replaces messy group chats with structured posts, notices, resident approval, directory privacy, and admin controls.
 
 This repository intentionally excludes marketplace, payments, SOS, carpooling, borrow/lend, billing, and AI moderation.
 
 ## Project Structure
 
 ```text
-mohalla/
+nivaas/
   backend/   Express, JavaScript, Prisma, PostgreSQL, JWT
   mobile/    Expo React Native, TypeScript, NativeWind
 ```
@@ -37,7 +37,7 @@ npm run dev
 
 Default seed users:
 
-- Admin: `admin@mohalla.app` / `password123`
+- Admin: `admin@nivaas.app` / `password123`
 - Resident: `9000000002` / `password123`
 - Community invite code: `GREEN123`
 
@@ -129,7 +129,7 @@ Creates a community and promotes the creator to approved admin.
 
 ```json
 {
-  "name": "Green Park Mohalla",
+  "name": "Green Park Nivaas",
   "city": "Hyderabad",
   "area": "Kondapur"
 }

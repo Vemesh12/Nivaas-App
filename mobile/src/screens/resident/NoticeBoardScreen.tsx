@@ -1,6 +1,6 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { FlatList, Text } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { noticeApi } from "../../api/noticeApi";
 import Card from "../../components/Card";
@@ -26,8 +26,9 @@ export default function NoticeBoardScreen() {
         data={notices}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={<EmptyState title="No notices" message="Admin notices will appear here." />}
+        ItemSeparatorComponent={() => <View className="h-3" />}
         renderItem={({ item }) => (
-          <Card className={`mb-3 ${item.isImportant ? "border-primary" : ""}`}>
+          <Card className={item.isImportant ? "border-primary" : ""}>
             <Text className="text-xs font-semibold uppercase text-primary">{item.isImportant ? "Important" : "Notice"}</Text>
             <Text className="mt-2 text-lg font-bold text-ink">{item.title}</Text>
             <Text className="mt-1 text-muted">{item.description}</Text>

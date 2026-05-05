@@ -9,10 +9,15 @@ import Card from "../../components/Card";
 import Input from "../../components/Input";
 import { colors } from "../../constants/colors";
 import { Notice } from "../../types";
+import { getApiErrorMessage } from "../../utils/apiError";
+import { FieldErrors, isBlank } from "../../utils/formValidation";
+
+type NoticeField = "title" | "description";
 
 export default function ManageNoticesScreen() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [form, setForm] = useState({ title: "", description: "", isImportant: false });
+  const [errors, setErrors] = useState<FieldErrors<NoticeField>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const load = async () => {
@@ -22,22 +27,38 @@ export default function ManageNoticesScreen() {
   useFocusEffect(useCallback(() => { load(); }, []));
 
   const save = async () => {
+    const nextErrors: FieldErrors<NoticeField> = {};
+    if (isBlank(form.title)) nextErrors.title = "Enter a notice title.";
+    else if (form.title.trim().length < 3) nextErrors.title = "Title must be at least 3 characters.";
+    if (isBlank(form.description)) nextErrors.description = "Enter a notice description.";
+    else if (form.description.trim().length < 3) nextErrors.description = "Description must be at least 3 characters.";
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
     try {
+      const payload = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        isImportant: form.isImportant
+      };
       if (editingId) {
-        await noticeApi.update(editingId, form);
+        await noticeApi.update(editingId, payload);
       } else {
-        await noticeApi.create(form);
+        await noticeApi.create(payload);
       }
       setForm({ title: "", description: "", isImportant: false });
+      setErrors({});
       setEditingId(null);
       await load();
     } catch (error: any) {
-      Alert.alert("Could not save notice", error.message || "Please try again.");
+      Alert.alert("Could not save notice", getApiErrorMessage(error, "Please try again."));
     }
   };
 
   const edit = (notice: Notice) => {
     setEditingId(notice.id);
+    setErrors({});
     setForm({ title: notice.title, description: notice.description, isImportant: notice.isImportant });
   };
 
@@ -54,8 +75,14 @@ export default function ManageNoticesScreen() {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <Card className="mb-4">
-            <Input label="Notice title" value={form.title} onChangeText={(title) => setForm((c) => ({ ...c, title }))} />
-            <Input label="Description" value={form.description} onChangeText={(description) => setForm((c) => ({ ...c, description }))} multiline className="min-h-24 pt-3" />
+            <Input label="Notice title" value={form.title} onChangeText={(title) => {
+              setForm((c) => ({ ...c, title }));
+              if (errors.title) setErrors((current) => ({ ...current, title: undefined }));
+            }} error={errors.title} />
+            <Input label="Description" value={form.description} onChangeText={(description) => {
+              setForm((c) => ({ ...c, description }));
+              if (errors.description) setErrors((current) => ({ ...current, description: undefined }));
+            }} multiline className="min-h-24 pt-3" error={errors.description} />
             <View className="mb-4 flex-row items-center justify-between">
               <Text className="font-semibold text-ink">Important notice</Text>
               <Switch value={form.isImportant} onValueChange={(isImportant) => setForm((c) => ({ ...c, isImportant }))} trackColor={{ true: colors.primary }} />
@@ -65,6 +92,7 @@ export default function ManageNoticesScreen() {
               <View className="mt-3">
                 <Button title="Cancel edit" icon={<X color="#17231D" size={18} />} variant="secondary" onPress={() => {
                   setEditingId(null);
+                  setErrors({});
                   setForm({ title: "", description: "", isImportant: false });
                 }} />
               </View>

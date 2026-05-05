@@ -3,11 +3,13 @@ import { FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-na
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { Plus } from "lucide-react-native";
+import { communityApi } from "../../api/communityApi";
 import { postApi } from "../../api/postApi";
 import Card from "../../components/Card";
 import CategoryBadge from "../../components/CategoryBadge";
 import EmptyState from "../../components/EmptyState";
 import Header from "../../components/Header";
+import { Community } from "../../types";
 import { Post, PostCategory } from "../../types";
 import { formatDate } from "../../utils/formatDate";
 
@@ -17,6 +19,7 @@ export default function HomeFeedScreen({ navigation }: any) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [category, setCategory] = useState<PostCategory | undefined>();
   const [loading, setLoading] = useState(false);
+  const [community, setCommunity] = useState<Community | null>(null);
   const insets = useSafeAreaInsets();
 
   const load = async (selected = category) => {
@@ -29,11 +32,27 @@ export default function HomeFeedScreen({ navigation }: any) {
     }
   };
 
+  const loadCommunity = async () => {
+    try {
+      const response: any = await communityApi.myCommunity();
+      setCommunity(response.data.community);
+    } catch {
+      setCommunity(null);
+    }
+  };
+
   useFocusEffect(useCallback(() => { load(); }, [category]));
+  useFocusEffect(useCallback(() => { loadCommunity(); }, []));
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "left", "right"]}>
       <View className="px-5 pt-4">
+        <View className="mb-5 items-center">
+          <Text className="text-3xl font-extrabold text-primary">Nivaas</Text>
+          <Text className="mt-1 text-center text-sm font-semibold text-muted">
+            {community?.name || "Your community"}
+          </Text>
+        </View>
         <Header title="Community feed" subtitle="Pinned notices and neighbour updates in one calm place." />
         <FlatList
           horizontal
@@ -55,7 +74,7 @@ export default function HomeFeedScreen({ navigation }: any) {
         data={posts}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load()} />}
-        ListEmptyComponent={<EmptyState title="No posts yet" message="Create the first structured update for your Mohalla." />}
+        ListEmptyComponent={<EmptyState title="No posts yet" message="Create the first structured update for your Nivaas." />}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => navigation.navigate("PostDetails", { id: item.id })} activeOpacity={0.85} className="mb-3">
             <Card>

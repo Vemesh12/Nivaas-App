@@ -18,7 +18,7 @@ async function main() {
     data: {
       fullName: "Aarav Sharma",
       phone: "9000000001",
-      email: "admin@mohalla.app",
+      email: "admin@nivaas.app",
       password,
       flatNumber: "A-101",
       role: "ADMIN",
@@ -29,7 +29,7 @@ async function main() {
 
   const community = await prisma.community.create({
     data: {
-      name: "Green Park Mohalla",
+      name: "Green Park Nivaas",
       city: "Hyderabad",
       area: "Kondapur",
       inviteCode: "GREEN123",
@@ -124,7 +124,7 @@ async function main() {
   });
 
   console.log("Seed complete");
-  console.log("Admin login: admin@mohalla.app / password123");
+  console.log("Admin login: admin@nivaas.app / password123");
   console.log("Resident login: 9000000002 / password123");
   console.log("Pending resident:", pending.phone);
 }
