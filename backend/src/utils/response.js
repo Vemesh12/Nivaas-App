@@ -1,5 +1,5 @@
 const sendSuccess = (res, data, statusCode = 200) => {
-  res.status(statusCode).json({ success: true, data });
+  res.status(statusCode).json({ success: true, data, errors: [] });
 };
 
 class AppError extends Error {

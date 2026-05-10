@@ -1,20 +1,31 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import { FlatList, RefreshControl, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { userApi } from "../../api/userApi";
 import Card from "../../components/Card";
 import EmptyState from "../../components/EmptyState";
 import Header from "../../components/Header";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 type Resident = { id: string; fullName: string; flatNumber: string; phone?: string | null };
 
 export default function DirectoryScreen() {
   const [residents, setResidents] = useState<Resident[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const insets = useSafeAreaInsets();
   const load = async () => {
-    const response: any = await userApi.directory();
-    setResidents(response.data.residents);
+    setLoading(true);
+    try {
+      const response: any = await userApi.directory();
+      setResidents(response.data.residents);
+      setLoadError("");
+    } catch (error) {
+      setLoadError(getApiErrorMessage(error, "Could not load neighbours. Pull down to try again."));
+    } finally {
+      setLoading(false);
+    }
   };
   useFocusEffect(useCallback(() => { load(); }, []));
 
@@ -25,7 +36,13 @@ export default function DirectoryScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
         data={residents}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<EmptyState title="No residents" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
+        ListEmptyComponent={
+          <EmptyState
+            title={loadError ? "Could not load neighbours" : "No neighbours yet"}
+            message={loadError || "Approved residents from your community will appear here."}
+          />
+        }
         ItemSeparatorComponent={() => <View className="h-3" />}
         renderItem={({ item }) => (
           <Card>

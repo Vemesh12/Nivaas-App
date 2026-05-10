@@ -11,6 +11,7 @@ import EmptyState from "../../components/EmptyState";
 import Header from "../../components/Header";
 import { Community } from "../../types";
 import { Post, PostCategory } from "../../types";
+import { getApiErrorMessage } from "../../utils/apiError";
 import { formatDate } from "../../utils/formatDate";
 
 const categories: PostCategory[] = ["GENERAL", "ALERT", "HELP", "LOST_FOUND", "EVENT"];
@@ -19,6 +20,7 @@ export default function HomeFeedScreen({ navigation }: any) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [category, setCategory] = useState<PostCategory | undefined>();
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [community, setCommunity] = useState<Community | null>(null);
   const insets = useSafeAreaInsets();
 
@@ -27,6 +29,9 @@ export default function HomeFeedScreen({ navigation }: any) {
     try {
       const response: any = await postApi.list(selected);
       setPosts(response.data.posts);
+      setLoadError("");
+    } catch (error) {
+      setLoadError(getApiErrorMessage(error, "Could not load posts. Pull down to try again."));
     } finally {
       setLoading(false);
     }
@@ -74,7 +79,12 @@ export default function HomeFeedScreen({ navigation }: any) {
         data={posts}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load()} />}
-        ListEmptyComponent={<EmptyState title="No posts yet" message="Create the first structured update for your Nivaas." />}
+        ListEmptyComponent={
+          <EmptyState
+            title={loadError ? "Could not load posts" : "No posts yet"}
+            message={loadError || "Create the first structured update for your Nivaas."}
+          />
+        }
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => navigation.navigate("PostDetails", { id: item.id })} activeOpacity={0.85} className="mb-3">
             <Card>

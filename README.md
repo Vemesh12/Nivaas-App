@@ -1,8 +1,8 @@
 # Nivaas
 
-Nivaas is a focused MVP for verified apartment, street, or neighbourhood communities. It replaces messy group chats with structured posts, notices, resident approval, directory privacy, and admin controls.
+Nivaas is a full-stack MVP for verified apartment, street, or neighbourhood communities. It helps residents move from noisy chat groups to structured posts, notices, resident approvals, a directory, and admin controls.
 
-This repository intentionally excludes marketplace, payments, SOS, carpooling, borrow/lend, billing, and AI moderation.
+This MVP intentionally excludes marketplace, payments, SOS, carpooling, borrow/lend, billing, and AI moderation.
 
 ## Project Structure
 
@@ -12,6 +12,19 @@ nivaas/
   mobile/    Expo React Native, TypeScript, NativeWind
 ```
 
+## Demo Accounts
+
+After seeding the database, use these accounts:
+
+```text
+Admin:    admin@nivaas.app / password123
+Resident: 9000000002 / password123
+Pending:  9000000005 / password123
+Invite:   GREEN123
+```
+
+Seed data creates one community, approved residents, one pending resident, posts, comments, likes, and notices.
+
 ## Backend Setup
 
 ```bash
@@ -19,15 +32,15 @@ cd backend
 npm install
 ```
 
-Create a PostgreSQL database, then copy the environment example:
+Create a PostgreSQL database named `nivaas`, then copy the environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Update `DATABASE_URL` and `JWT_SECRET` in `.env`.
+Update `DATABASE_URL` and `JWT_SECRET` in `backend/.env`.
 
-Run Prisma and seed data:
+Run migrations, seed data, and start the API:
 
 ```bash
 npx prisma migrate dev
@@ -35,11 +48,19 @@ npx prisma db seed
 npm run dev
 ```
 
-Default seed users:
+Health check:
 
-- Admin: `admin@nivaas.app` / `password123`
-- Resident: `9000000002` / `password123`
-- Community invite code: `GREEN123`
+```http
+GET http://localhost:4000/health
+```
+
+For physical-phone testing, the backend listens on `0.0.0.0`. Use your laptop IPv4 address in the mobile `.env`, for example:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.15:4000/api
+```
+
+If the phone cannot reach `http://YOUR_IP:4000/health`, allow inbound TCP port `4000` in Windows Firewall.
 
 ## Mobile Setup
 
@@ -48,33 +69,47 @@ cd mobile
 npm install
 ```
 
-Set the API URL for your device or simulator:
+Copy the environment file:
 
 ```bash
 cp .env.example .env
-EXPO_PUBLIC_API_BASE_URL=http://localhost:4000/api
 ```
 
- <!-- to connect with mbile expo go app use thi scmd and: -->
+For Android emulator:
 
- npx expo start --lan --clear
+```env
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:4000/api
+```
 
+$env:REACT_NATIVE_PACKAGER_HOSTNAME="laptop IP"
+npx expo start --clear
 
-<!-- $env:REACT_NATIVE_PACKAGER_HOSTNAME="192.168.1.6"
+For Expo Go on a physical phone:
 
-and to again remove the hostname run thsi :  Remove-Item Env:REACT_NATIVE_PACKAGER_HOSTNAME   to conec tto android studio.
-
-and run : npx expo start --clear -->
-
-
-
-For a physical phone, use your computer LAN IP instead of `localhost`.
+```env
+EXPO_PUBLIC_API_BASE_URL=http://YOUR_LAPTOP_IPV4:4000/api
+```
 
 Start Expo:
 
 ```bash
-npx expo start
+npx expo start --tunnel --clear
 ```
+
+Use `--tunnel` when LAN does not connect reliably. Use `--lan` only when your phone and laptop can reach each other on the same Wi-Fi.
+
+## Demo Flow
+
+1. Start PostgreSQL and the backend.
+2. Run `npx prisma db seed` if you want a fresh demo database.
+3. Start Expo and open the app.
+4. Login as admin: `admin@nivaas.app` / `password123`.
+5. Review the admin dashboard, pending residents, notices, and members.
+6. Logout and register a new resident.
+7. Enter invite code `GREEN123`.
+8. Login as admin again and approve the pending resident.
+9. Login as the resident and create a post.
+10. Open the post, like it, add a comment, then edit/delete your own post.
 
 ## MVP Auth Rules
 
@@ -85,6 +120,25 @@ npx expo start
 - All backend queries are scoped to the logged-in user's community.
 - Admins can approve/reject residents, manage notices, remove residents, pin posts, and delete posts in their own community.
 - Residents can edit/delete only their own posts.
+
+## Useful Commands
+
+Backend:
+
+```bash
+npm run dev
+npx prisma migrate dev
+npx prisma db seed
+npx prisma studio
+```
+
+Mobile:
+
+```bash
+npm run typecheck
+npx expo start --tunnel --clear
+npx expo start --lan --clear
+```
 
 ## API Documentation
 
@@ -149,7 +203,7 @@ Creates a community and promotes the creator to approved admin.
 
 `GET /posts`
 
-Optional filter:
+Optional filters:
 
 ```http
 GET /posts?category=LOST_FOUND
@@ -191,7 +245,7 @@ GET /posts?category=HELP
 
 ```json
 {
-  "title": "Monthly community meeting",
+  "title": "Monthly residents meeting",
   "description": "Sunday at 6 PM in the clubhouse.",
   "isImportant": true
 }

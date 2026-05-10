@@ -1,7 +1,7 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { Plus } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { FlatList, Text, TouchableOpacity } from "react-native";
+import { FlatList, RefreshControl, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { postApi } from "../../../api/postApi";
 import Button from "../../../components/Button";
@@ -9,6 +9,7 @@ import Card from "../../../components/Card";
 import EmptyState from "../../../components/EmptyState";
 import Header from "../../../components/Header";
 import { Post, PostCategory } from "../../../types";
+import { getApiErrorMessage } from "../../../utils/apiError";
 import { formatDate } from "../../../utils/formatDate";
 
 export default function CategoryPostsScreen({
@@ -23,10 +24,20 @@ export default function CategoryPostsScreen({
   subtitle: string;
 }) {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const insets = useSafeAreaInsets();
   const load = async () => {
-    const response: any = await postApi.list(category);
-    setPosts(response.data.posts);
+    setLoading(true);
+    try {
+      const response: any = await postApi.list(category);
+      setPosts(response.data.posts);
+      setLoadError("");
+    } catch (error) {
+      setLoadError(getApiErrorMessage(error, "Could not load posts. Pull down to try again."));
+    } finally {
+      setLoading(false);
+    }
   };
   useFocusEffect(useCallback(() => { load(); }, [category]));
 
@@ -37,8 +48,14 @@ export default function CategoryPostsScreen({
         contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
         data={posts}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
         ListHeaderComponent={<Button title={`Create ${title} post`} icon={<Plus color="#FFFFFF" size={18} />} className="mb-4" onPress={() => navigation.navigate("CreatePost", { category })} />}
-        ListEmptyComponent={<EmptyState title="Nothing here yet" message="Posts in this category will appear here." />}
+        ListEmptyComponent={
+          <EmptyState
+            title={loadError ? "Could not load posts" : "Nothing here yet"}
+            message={loadError || "Posts in this category will appear here."}
+          />
+        }
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => navigation.navigate("PostDetails", { id: item.id })} activeOpacity={0.85} className="mb-3">
             <Card>

@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "smoke": "node scripts/smoke-check.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

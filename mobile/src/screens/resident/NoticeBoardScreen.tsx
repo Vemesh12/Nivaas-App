@@ -1,20 +1,31 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import { FlatList, RefreshControl, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { noticeApi } from "../../api/noticeApi";
 import Card from "../../components/Card";
 import EmptyState from "../../components/EmptyState";
 import Header from "../../components/Header";
 import { Notice } from "../../types";
+import { getApiErrorMessage } from "../../utils/apiError";
 import { formatDate } from "../../utils/formatDate";
 
 export default function NoticeBoardScreen() {
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const insets = useSafeAreaInsets();
   const load = async () => {
-    const response: any = await noticeApi.list();
-    setNotices(response.data.notices);
+    setLoading(true);
+    try {
+      const response: any = await noticeApi.list();
+      setNotices(response.data.notices);
+      setLoadError("");
+    } catch (error) {
+      setLoadError(getApiErrorMessage(error, "Could not load notices. Pull down to try again."));
+    } finally {
+      setLoading(false);
+    }
   };
   useFocusEffect(useCallback(() => { load(); }, []));
 
@@ -25,7 +36,13 @@ export default function NoticeBoardScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
         data={notices}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<EmptyState title="No notices" message="Admin notices will appear here." />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
+        ListEmptyComponent={
+          <EmptyState
+            title={loadError ? "Could not load notices" : "No notices yet"}
+            message={loadError || "Important and regular announcements from admins will appear here."}
+          />
+        }
         ItemSeparatorComponent={() => <View className="h-3" />}
         renderItem={({ item }) => (
           <Card className={item.isImportant ? "border-primary" : ""}>

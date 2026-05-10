@@ -73,8 +73,8 @@ async function main() {
   const posts = await Promise.all([
     prisma.post.create({
       data: {
-        title: "Water supply timing update",
-        description: "Water supply may be delayed by 30 minutes tomorrow morning due to tank cleaning.",
+        title: "Water supply interruption tomorrow",
+        description: "Tank cleaning is scheduled from 9 AM to 11 AM tomorrow. Please store drinking water tonight.",
         category: "ALERT",
         isPinned: true,
         communityId: community.id,
@@ -83,8 +83,8 @@ async function main() {
     }),
     prisma.post.create({
       data: {
-        title: "Lost set of keys near Block B",
-        description: "Small keychain with two house keys. Please comment if found.",
+        title: "Lost keys near Block B lift",
+        description: "Small blue keychain with two house keys. Please comment here if you found it.",
         category: "LOST_FOUND",
         communityId: community.id,
         authorId: residents[0].id
@@ -93,30 +93,56 @@ async function main() {
     prisma.post.create({
       data: {
         title: "Need plumber recommendation",
-        description: "Kitchen sink is leaking. Any trusted plumber nearby?",
+        description: "Kitchen sink in A-204 is leaking. Any trusted plumber available nearby today?",
         category: "HELP",
         communityId: community.id,
         authorId: residents[1].id
       }
+    }),
+    prisma.post.create({
+      data: {
+        title: "Sunday badminton group",
+        description: "A few of us are playing at 7 AM this Sunday near the community court. Join if interested.",
+        category: "EVENT",
+        communityId: community.id,
+        authorId: residents[2].id
+      }
     })
   ]);
 
-  await prisma.comment.create({
-    data: { text: "I know someone reliable. Sharing contact in person.", postId: posts[2].id, authorId: residents[2].id }
+  await prisma.comment.createMany({
+    data: [
+      { text: "I know someone reliable. Sharing the contact with you.", postId: posts[2].id, authorId: residents[2].id },
+      { text: "I can join. Please add my name.", postId: posts[3].id, authorId: residents[0].id }
+    ]
+  });
+
+  await prisma.like.createMany({
+    data: [
+      { postId: posts[0].id, userId: residents[0].id },
+      { postId: posts[0].id, userId: residents[1].id },
+      { postId: posts[2].id, userId: residents[2].id }
+    ]
   });
 
   await prisma.notice.createMany({
     data: [
       {
-        title: "Monthly community meeting",
-        description: "Meeting at the clubhouse on Sunday at 6 PM.",
+        title: "Monthly residents meeting",
+        description: "Residents meeting at the clubhouse on Sunday at 6 PM. Agenda: water schedule, parking, and festival planning.",
         isImportant: true,
         communityId: community.id,
         createdById: admin.id
       },
       {
         title: "Garden maintenance",
-        description: "The central garden will be closed on Friday morning.",
+        description: "The central garden will be closed on Friday morning from 8 AM to 12 PM for maintenance.",
+        communityId: community.id,
+        createdById: admin.id
+      },
+      {
+        title: "Waste collection reminder",
+        description: "Please keep dry and wet waste separated before the 8:30 AM collection.",
         communityId: community.id,
         createdById: admin.id
       }
